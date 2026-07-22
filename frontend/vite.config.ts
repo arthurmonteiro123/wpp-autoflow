@@ -12,4 +12,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Fora do sandbox da Lovable o plugin nitro fica desativado por padrão e, quando ativado,
+  // usa "cloudflare-module" como preset default — o que não roda como servidor Node comum.
+  // Forçamos "node-server" para hosts como Railway/Docker (build gera .output/server/index.mjs).
+  nitro: {
+    preset: "node-server",
+  },
 });
