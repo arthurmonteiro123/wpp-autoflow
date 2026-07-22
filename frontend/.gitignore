@@ -17,6 +17,11 @@ dist-ssr
 .vite
 *.local
 
+# Env vars (locais — Railway usa as variáveis configuradas no próprio painel, não este arquivo)
+.env
+.env.local
+!.env.example
+
 # Obsidian vault (config de editor local)
 .obsidian/
 
