@@ -29,3 +29,6 @@ drizzle/migrations/*.sql
 # Uploads
 /tmp/
 uploads/
+
+# Dados reais de clientes (PII) - nao versionar
+docs/contatos_extraidos.json
