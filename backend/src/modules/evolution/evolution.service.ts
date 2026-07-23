@@ -41,6 +41,12 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
   private readonly s3PublicUrl: string | null;
   private readonly s3PublicUrlEvolution: string | null;
 
+  // Host pelo qual a Evolution API alcança este backend para enviar webhooks.
+  // Em Railway, RAILWAY_PRIVATE_DOMAIN é injetado automaticamente (rede privada);
+  // em Docker Compose local, cai no host.docker.internal do docker-compose.yml.
+  private readonly webhookHost: string;
+  private readonly appPort: number;
+
   constructor(
     private configService: ConfigService,
     private db: DatabaseService,
@@ -59,6 +65,9 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
 
     this.s3PublicUrl = configService.get('S3_PUBLIC_URL') || null;
     this.s3PublicUrlEvolution = configService.get('S3_PUBLIC_URL_EVOLUTION') || null;
+
+    this.webhookHost = configService.get('RAILWAY_PRIVATE_DOMAIN') || 'host.docker.internal';
+    this.appPort = configService.get('APP_PORT', 3000);
 
     this.http = axios.create({
       baseURL: this.baseURL,
@@ -271,7 +280,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
 
   private async configureWebhook(name: string) {
     const secret = this.webhookSecret;
-    const webhookUrl = `http://host.docker.internal:3000/webhook/evolution${secret ? `?secret=${encodeURIComponent(secret)}` : ''}`;
+    const webhookUrl = `http://${this.webhookHost}:${this.appPort}/webhook/evolution${secret ? `?secret=${encodeURIComponent(secret)}` : ''}`;
 
     const webhook: Record<string, any> = {
       enabled: true,
