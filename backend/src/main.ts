@@ -106,4 +106,7 @@ async function bootstrap() {
   console.log(`Evolution API:           ${evolutionUrl}`);
   console.log(`Evolution Manager:       ${evolutionUrl}/manager`);
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Falha ao inicializar a aplicação:', err);
+  process.exit(1);
+});

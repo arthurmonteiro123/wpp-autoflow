@@ -42,10 +42,15 @@ export class MediaService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      await this.s3.send(new HeadBucketCommand({ Bucket: this.bucket }));
-    } catch {
-      await this.s3.send(new CreateBucketCommand({ Bucket: this.bucket }));
-      this.logger.log(`Bucket "${this.bucket}" criado automaticamente`);
+      try {
+        await this.s3.send(new HeadBucketCommand({ Bucket: this.bucket }));
+      } catch {
+        await this.s3.send(new CreateBucketCommand({ Bucket: this.bucket }));
+        this.logger.log(`Bucket "${this.bucket}" criado automaticamente`);
+      }
+    } catch (err: any) {
+      this.logger.warn(`S3/MinIO indisponível ao inicializar bucket "${this.bucket}": ${err?.message ?? err}`);
+      return;
     }
 
     // A Evolution API baixa a mídia anonimamente (só recebe a URL, sem credenciais AWS),
