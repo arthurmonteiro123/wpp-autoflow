@@ -180,17 +180,17 @@ export class PulseJob extends WorkerHost implements OnModuleInit {
 
           try {
             await this.evolutionService.setLabel(contact.phoneNumber, 'INATIVO', instanceName);
-          } catch (err) {
-            this.logger.error(`Failed to set label for ${contact.phoneNumber}`, err);
+          } catch (err: any) {
+            this.logger.error(`Failed to set label for ${contact.phoneNumber}: ${err?.message ?? err}`);
           }
-        } catch (err) {
-          this.logger.error(`Error processing contact ${contact.id}`, err);
+        } catch (err: any) {
+          this.logger.error(`Error processing contact ${contact.id}: ${err?.message ?? err}`);
         }
       }
 
       this.logger.log('Pulse completed');
-    } catch (err) {
-      this.logger.error('Pulse job error', err);
+    } catch (err: any) {
+      this.logger.error(`Pulse job error: ${err?.message ?? err}`);
       throw err;
     }
   }

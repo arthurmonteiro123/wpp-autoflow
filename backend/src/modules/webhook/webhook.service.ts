@@ -55,8 +55,8 @@ export class WebhookService {
         try {
           await this.evolutionService.setLabel(phoneNumber, 'RESPONDEU', instanceName || undefined);
           await this.evolutionService.removeLabel(phoneNumber, 'INATIVO', instanceName || undefined);
-        } catch (err) {
-          this.logger.error('Failed to update labels', err);
+        } catch (err: any) {
+          this.logger.error(`Failed to update labels: ${err?.message ?? err}`);
         }
 
         const message =
@@ -80,8 +80,8 @@ export class WebhookService {
           instanceName: instanceName || undefined,
         });
       }
-    } catch (err) {
-      this.logger.error('Error processing received message', err);
+    } catch (err: any) {
+      this.logger.error(`Error processing received message: ${err?.message ?? err}`);
     }
   }
 
@@ -133,8 +133,8 @@ export class WebhookService {
           await this.repo.updateMensagemLogByEvolutionId(evolutionId, status);
         }
       }
-    } catch (err) {
-      this.logger.error('Erro ao atualizar status de mensagem', err);
+    } catch (err: any) {
+      this.logger.error(`Erro ao atualizar status de mensagem: ${err?.message ?? err}`);
     }
   }
 }

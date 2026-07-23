@@ -262,8 +262,11 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
 
         await this.configureWebhook(name);
       }
-    } catch (err) {
-      this.logger.error(`Falha ao preparar instância "${name}"`, err);
+    } catch (err: any) {
+      const detail = err?.response
+        ? `status=${err.response.status} ${JSON.stringify(err.response.data)}`
+        : err?.message;
+      this.logger.error(`Falha ao preparar instância "${name}": ${detail}`);
     }
   }
 
@@ -491,8 +494,8 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
         status: 'ENTREGUE',
         evolutionId: evolutionId ?? null,
       });
-    } catch (err) {
-      this.logger.error('Falha ao registrar log de mensagem', err);
+    } catch (err: any) {
+      this.logger.error(`Falha ao registrar log de mensagem: ${err?.message ?? err}`);
     }
   }
 

@@ -88,7 +88,7 @@ export class ScheduledBroadcastJob extends WorkerHost {
           status = 'ERRO';
           errorDetails = err.message;
           totalErrors++;
-          this.logger.error(`Erro ao enviar para ${contact.phoneNumber}`, err);
+          this.logger.error(`Erro ao enviar para ${contact.phoneNumber}: ${err.message}`);
         }
 
         await this.repo.insertEntrega({
@@ -111,8 +111,8 @@ export class ScheduledBroadcastJob extends WorkerHost {
       this.logger.log(
         `Broadcast ${campanhaId} concluído: ${totalSent} enviados, ${totalErrors} erros`,
       );
-    } catch (err) {
-      this.logger.error(`Erro no broadcast ${campanhaId}`, err);
+    } catch (err: any) {
+      this.logger.error(`Erro no broadcast ${campanhaId}: ${err?.message ?? err}`);
       await this.repo.updateCampanha(campanhaId, {
         campaignStatus: 'CANCELADO',
         updatedAt: new Date(),

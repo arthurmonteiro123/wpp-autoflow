@@ -70,7 +70,7 @@ export class MediaDeliveryJob extends WorkerHost {
 
       this.logger.log(`Entrega ${entregaId} concluída com sucesso`);
     } catch (err: any) {
-      this.logger.error(`Erro na entrega ${entregaId}`, err);
+      this.logger.error(`Erro na entrega ${entregaId}: ${err.message}`);
 
       await this.repo.updateEntrega(entregaId, {
         status: 'ERRO',
