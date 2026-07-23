@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, setAccessToken, setUnauthenticatedHandler } from "./api";
+import { api, BASE_URL, setAccessToken, setUnauthenticatedHandler } from "./api";
 
 export type Role = "ADMIN" | "OPERADOR" | "VENDEDOR";
 
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    fetch("http://localhost:3000/auth/refresh", {
+    fetch(`${BASE_URL}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
