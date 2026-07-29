@@ -297,6 +297,7 @@ function MidiasPage() {
       )}
 
       <UploadModal
+        key={droppedFile ? `${droppedFile.name}-${droppedFile.lastModified}` : "manual"}
         open={uploadOpen}
         onClose={() => {
           setUploadOpen(false);
