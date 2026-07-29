@@ -33,11 +33,19 @@ export function Surface({
   children,
   onClick,
   style,
+  onDragEnter,
+  onDragLeave,
+  onDragOver,
+  onDrop,
 }: {
   className?: string;
   children: ReactNode;
   onClick?: () => void;
   style?: React.CSSProperties;
+  onDragEnter?: React.DragEventHandler<HTMLDivElement>;
+  onDragLeave?: React.DragEventHandler<HTMLDivElement>;
+  onDragOver?: React.DragEventHandler<HTMLDivElement>;
+  onDrop?: React.DragEventHandler<HTMLDivElement>;
 }) {
   return (
     <div
@@ -48,6 +56,10 @@ export function Surface({
       )}
       onClick={onClick}
       style={style}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
     >
       {children}
     </div>

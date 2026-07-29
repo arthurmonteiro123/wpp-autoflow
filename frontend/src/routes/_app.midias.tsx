@@ -13,7 +13,7 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, type DragEvent } from "react";
 import { toast } from "sonner";
 import { extractErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -25,9 +25,17 @@ export const Route = createFileRoute("/_app/midias")({
   component: MidiasPage,
 });
 
-function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [nome, setNome] = useState("");
+function UploadModal({
+  open,
+  onClose,
+  initialFile,
+}: {
+  open: boolean;
+  onClose: () => void;
+  initialFile?: File | null;
+}) {
+  const [file, setFile] = useState<File | null>(initialFile ?? null);
+  const [nome, setNome] = useState(initialFile ? initialFile.name.replace(/\.[^/.]+$/, "") : "");
   const upload = useUploadMidia();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -128,6 +136,9 @@ function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) 
 
 function MidiasPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [droppedFile, setDroppedFile] = useState<File | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const dragCounter = useRef(0);
   const { data, isLoading, error } = useMidias();
   const deletar = useDeletarMidia();
 
@@ -141,6 +152,36 @@ function MidiasPage() {
     } catch (err) {
       toast.error(extractErrorMessage(err));
     }
+  }
+
+  function handleDragEnter(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    if (!e.dataTransfer.types.includes("Files")) return;
+    dragCounter.current += 1;
+    setIsDraggingOver(true);
+  }
+
+  function handleDragLeave(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    dragCounter.current = Math.max(0, dragCounter.current - 1);
+    if (dragCounter.current === 0) setIsDraggingOver(false);
+  }
+
+  function handleDragOver(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+  }
+
+  function handleDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    dragCounter.current = 0;
+    setIsDraggingOver(false);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length === 0) return;
+    if (droppedFiles.length > 1) {
+      toast.info("Apenas 1 arquivo por vez — enviando o primeiro");
+    }
+    setDroppedFile(droppedFiles[0]);
+    setUploadOpen(true);
   }
 
   if (error) {
@@ -167,14 +208,23 @@ function MidiasPage() {
       }
     >
       <Surface
-        className="p-8 border-dashed cursor-pointer hover:border-brand/40 transition"
+        className={cn(
+          "p-8 border-dashed cursor-pointer transition",
+          isDraggingOver ? "border-brand bg-brand/5" : "hover:border-brand/40",
+        )}
         onClick={() => setUploadOpen(true)}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
       >
         <div className="text-center space-y-2">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand-soft text-brand">
             <Upload className="h-6 w-6" />
           </div>
-          <div className="text-sm font-medium">Arraste arquivos aqui</div>
+          <div className="text-sm font-medium">
+            {isDraggingOver ? "Solte o arquivo aqui" : "Arraste arquivos aqui"}
+          </div>
           <div className="text-xs text-muted-foreground">
             ou clique para selecionar · imagens, vídeos, documentos e áudio até 50 MB
           </div>
@@ -246,7 +296,14 @@ function MidiasPage() {
         </div>
       )}
 
-      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
+      <UploadModal
+        open={uploadOpen}
+        onClose={() => {
+          setUploadOpen(false);
+          setDroppedFile(null);
+        }}
+        initialFile={droppedFile}
+      />
     </Page>
   );
 }
