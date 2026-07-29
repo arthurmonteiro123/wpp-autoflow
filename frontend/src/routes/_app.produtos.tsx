@@ -64,6 +64,8 @@ export const Route = createFileRoute("/_app/produtos")({
 
 const UNIDADES = ["un", "g", "kg", "ml", "L", "cx", "pct"];
 
+const MAX_PRODUCT_MEDIA = 2;
+
 const TIER_META: Record<
   TipoCliente,
   { icon: string | null; label: string; leadLabel: string; color: string }
@@ -140,8 +142,8 @@ function ProdutoModal({
   const [novaCategoriaNome, setNovaCategoriaNome] = useState("");
   const [adicionandoCategoria, setAdicionandoCategoria] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  // Only one photo is allowed per product — single selection, not a set.
-  const [pendingMediaId, setPendingMediaId] = useState<string | null>(null);
+  // Até MAX_PRODUCT_MEDIA fotos por produto.
+  const [pendingMediaIds, setPendingMediaIds] = useState<string[]>([]);
 
   const { data: categoriasData } = useCategorias();
   const categorias = categoriasData ?? [];
@@ -168,13 +170,20 @@ function ProdutoModal({
         await removerMidia.mutateAsync({ produtoId: initial!.id, mediaEntryId: existing.id });
         return;
       }
-      // Enforce a single photo: unatrelar any other attached image first.
-      for (const pm of attachedImages) {
-        await removerMidia.mutateAsync({ produtoId: initial!.id, mediaEntryId: pm.id });
+      if (attachedImages.length >= MAX_PRODUCT_MEDIA) {
+        toast.error(`Máximo de ${MAX_PRODUCT_MEDIA} fotos por produto`);
+        return;
       }
       await atrelarMidia.mutateAsync({ produtoId: initial!.id, mediaId: m.id, caption: m.name });
     } else {
-      setPendingMediaId((prev) => (prev === m.id ? null : m.id));
+      setPendingMediaIds((prev) => {
+        if (prev.includes(m.id)) return prev.filter((id) => id !== m.id);
+        if (prev.length >= MAX_PRODUCT_MEDIA) {
+          toast.error(`Máximo de ${MAX_PRODUCT_MEDIA} fotos por produto`);
+          return prev;
+        }
+        return [...prev, m.id];
+      });
     }
   }
 
@@ -214,11 +223,11 @@ function ProdutoModal({
         toast.success("Produto atualizado");
       } else {
         const novoProduto = await criar.mutateAsync(body);
-        if (pendingMediaId) {
-          const midia = midias.find((m) => m.id === pendingMediaId);
+        for (const mediaId of pendingMediaIds) {
+          const midia = midias.find((m) => m.id === mediaId);
           await atrelarMidia.mutateAsync({
             produtoId: novoProduto.id,
-            mediaId: pendingMediaId,
+            mediaId,
             caption: midia?.name,
           });
         }
@@ -355,7 +364,9 @@ function ProdutoModal({
             ) : (
               <div className="grid grid-cols-5 gap-2 max-h-44 overflow-y-auto p-1">
                 {midias.map((m) => {
-                  const isAttached = isEdit ? attachedByUrl.has(m.url) : pendingMediaId === m.id;
+                  const isAttached = isEdit
+                    ? attachedByUrl.has(m.url)
+                    : pendingMediaIds.includes(m.id);
                   return (
                     <button
                       key={m.id}
@@ -381,8 +392,8 @@ function ProdutoModal({
             )}
             <p className="text-[10px] text-muted-foreground">
               {isEdit
-                ? "Apenas 1 foto por produto — clique em outra para trocar, ou nela mesma para remover."
-                : "Selecione até 1 foto para o produto."}
+                ? `Até ${MAX_PRODUCT_MEDIA} fotos por produto — clique para adicionar ou remover.`
+                : `Selecione até ${MAX_PRODUCT_MEDIA} fotos para o produto.`}
             </p>
           </div>
         </div>
